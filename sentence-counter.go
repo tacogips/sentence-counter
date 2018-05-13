@@ -14,10 +14,12 @@ import (
 func main() {
 	var (
 		show         bool
+		showReverse  bool
 		destFilePath string
 	)
 
 	flag.BoolVar(&show, "show", false, "show mode")
+	flag.BoolVar(&showReverse, "show-reverse", false, "show mode")
 	flag.StringVar(&destFilePath, "dest", "", "log file path ")
 
 	flag.Parse()
@@ -37,8 +39,8 @@ func main() {
 		}
 	}
 
-	if show {
-		err := showLog(destFilePath)
+	if show || showReverse {
+		err := showLog(destFilePath, showReverse)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "failed to parse log file %s \n", destFilePath)
 			return
@@ -58,7 +60,7 @@ func main() {
 	}
 }
 
-func showLog(destFilePath string) error {
+func showLog(destFilePath string, reverse bool) error {
 	log, err := readLog(destFilePath)
 	if err != nil {
 		return err
@@ -66,9 +68,16 @@ func showLog(destFilePath string) error {
 
 	kvs := toKV(log)
 	sort.Slice(kvs, func(i, j int) bool {
-		if kvs[i].Value >= kvs[i].Value {
-			return true
+		if reverse {
+			if kvs[i].Value <= kvs[i].Value {
+				return true
+			}
+		} else {
+			if kvs[i].Value >= kvs[i].Value {
+				return true
+			}
 		}
+
 		return false
 	})
 
