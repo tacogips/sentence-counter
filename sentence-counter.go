@@ -14,11 +14,13 @@ import (
 func main() {
 	var (
 		show         bool
+		rm           bool
 		showReverse  bool
 		destFilePath string
 	)
 
 	flag.BoolVar(&show, "show", false, "show mode")
+	flag.BoolVar(&rm, "rm", false, "remove the sentnce")
 	flag.BoolVar(&showReverse, "show-reverse", false, "show mode")
 	flag.StringVar(&destFilePath, "dest", "", "log file path ")
 
@@ -45,6 +47,20 @@ func main() {
 			fmt.Fprintf(os.Stderr, "failed to parse log file %s \n", destFilePath)
 			return
 		}
+	} else if rm {
+		// remove
+		sentence, err := readFromStdin()
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to get input %+v \n", err)
+			return
+		}
+
+		err = rmFromLog(sentence, destFilePath)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "failed to write file %+v \n", err)
+			return
+		}
+
 	} else {
 		sentence, err := readFromStdin()
 		if err != nil {
@@ -103,7 +119,6 @@ func toKV(m map[string]int) (result []KV) {
 func incLog(s string, destFilePath string) error {
 	log, err := readLog(destFilePath)
 	if err != nil {
-		// TODO() : del
 		return err
 	}
 	if existsNumber, ok := log[s]; !ok {
@@ -111,6 +126,17 @@ func incLog(s string, destFilePath string) error {
 	} else {
 		existsNumber += 1
 		log[s] = existsNumber
+	}
+	return write(log, destFilePath)
+}
+
+func rmFromLog(s string, destFilePath string) error {
+	log, err := readLog(destFilePath)
+	if err != nil {
+		return err
+	}
+	if _, ok := log[s]; ok {
+		delete(log, s)
 	}
 	return write(log, destFilePath)
 }
