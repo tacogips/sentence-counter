@@ -56,6 +56,10 @@ func main() {
 			fmt.Fprintf(os.Stderr, "failed to get input %+v \n", err)
 			return
 		}
+		if len(sentenceRegex) == 0 {
+			fmt.Fprintf(os.Stderr, "need regex to remove %+v \n")
+			return
+		}
 
 		err = rmFromLog(sentenceRegex, destFilePath)
 		if err != nil {
