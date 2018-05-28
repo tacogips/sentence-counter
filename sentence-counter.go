@@ -8,10 +8,12 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"regexp"
 	"sort"
 )
 
 func main() {
+
 	var (
 		show         bool
 		rm           bool
@@ -20,7 +22,7 @@ func main() {
 	)
 
 	flag.BoolVar(&show, "show", false, "show mode")
-	flag.BoolVar(&rm, "rm", false, "remove the sentnce")
+	flag.BoolVar(&rm, "rm", false, "remove the sentnce.mathes to regex")
 	flag.BoolVar(&showReverse, "show-reverse", false, "show mode")
 	flag.StringVar(&destFilePath, "dest", "", "log file path ")
 
@@ -49,13 +51,13 @@ func main() {
 		}
 	} else if rm {
 		// remove
-		sentence, err := readFromStdin()
+		sentenceRegex, err := readFromStdin()
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "failed to get input %+v \n", err)
 			return
 		}
 
-		err = rmFromLog(sentence, destFilePath)
+		err = rmFromLog(sentenceRegex, destFilePath)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "failed to write file %+v \n", err)
 			return
@@ -130,13 +132,18 @@ func incLog(s string, destFilePath string) error {
 	return write(log, destFilePath)
 }
 
-func rmFromLog(s string, destFilePath string) error {
+func rmFromLog(sentenceRegex string, destFilePath string) error {
 	log, err := readLog(destFilePath)
 	if err != nil {
 		return err
 	}
-	if _, ok := log[s]; ok {
-		delete(log, s)
+
+	re, err := regexp.Compile(sentenceRegex)
+
+	for sentence, _ := range log {
+		if re.MatchString(sentence) {
+			delete(log, sentence)
+		}
 	}
 	return write(log, destFilePath)
 }
